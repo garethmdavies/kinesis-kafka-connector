@@ -58,11 +58,17 @@ public class AmazonKinesisSinkTask extends SinkTask {
 
 	private int sleepCycles;
 
+	private boolean avroParser;
+
+	private int avroSchemaCacheSize;
+
 	private SinkTaskContext sinkTaskContext;
 
-	private Map<String, KinesisProducer> producerMap = new HashMap<String, KinesisProducer>();
+	private Map<String, KinesisProducer> producerMap = new HashMap<>();
 
 	private KinesisProducer kinesisProducer;
+
+	private KafkaRecordParser kafkaRecordParser;
 
 	final FutureCallback<UserRecordResult> callback = new FutureCallback<UserRecordResult>() {
 		@Override
@@ -70,7 +76,7 @@ public class AmazonKinesisSinkTask extends SinkTask {
 			if (t instanceof UserRecordFailedException) {
 				Attempt last = Iterables.getLast(((UserRecordFailedException) t).getResult().getAttempts());
 				throw new DataException("Kinesis Producer was not able to publish data - " + last.getErrorCode() + "-"
-						+ last.getErrorMessage());
+																+ last.getErrorMessage());
 
 			}
 			throw new DataException("Exception during Kinesis put", t);
@@ -133,7 +139,7 @@ public class AmazonKinesisSinkTask extends SinkTask {
 
 			if (singleKinesisProducerPerPartition)
 				f = addUserRecord(producerMap.get(sinkRecord.kafkaPartition() + "@" + sinkRecord.topic()), streamName,
-						partitionKey, usePartitionAsHashKey, sinkRecord);
+													partitionKey, usePartitionAsHashKey, sinkRecord);
 			else
 				f = addUserRecord(kinesisProducer, streamName, partitionKey, usePartitionAsHashKey, sinkRecord);
 
@@ -211,18 +217,17 @@ public class AmazonKinesisSinkTask extends SinkTask {
 	}
 
 	private ListenableFuture<UserRecordResult> addUserRecord(KinesisProducer kp, String streamName, String partitionKey,
-			boolean usePartitionAsHashKey, SinkRecord sinkRecord) {
+																													 boolean usePartitionAsHashKey, SinkRecord sinkRecord) {
 
 		// If configured use kafka partition key as explicit hash key
 		// This will be useful when sending data from same partition into
 		// same shard
 		if (usePartitionAsHashKey)
 			return kp.addUserRecord(streamName, partitionKey, Integer.toString(sinkRecord.kafkaPartition()),
-					DataUtility.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
+															kafkaRecordParser.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
 		else
 			return kp.addUserRecord(streamName, partitionKey,
-					DataUtility.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
-
+															kafkaRecordParser.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
 	}
 
 	@Override
@@ -263,6 +268,17 @@ public class AmazonKinesisSinkTask extends SinkTask {
 		sleepPeriod = Integer.parseInt(props.get(AmazonKinesisSinkConnector.SLEEP_PERIOD));
 
 		sleepCycles = Integer.parseInt(props.get(AmazonKinesisSinkConnector.SLEEP_CYCLES));
+
+		avroParser = Boolean
+				.parseBoolean(props.get(AmazonKinesisSinkConnector.AVRO_PARSER));
+
+		avroSchemaCacheSize = Integer.parseInt(props.get(AmazonKinesisSinkConnector.AVRO_SCHEMA_CACHE_SIZE));
+
+		if(avroParser) {
+			kafkaRecordParser = new AvroDataUtility(avroSchemaCacheSize);
+		} else {
+			kafkaRecordParser = new DataUtility();
+		}
 
 		if (!singleKinesisProducerPerPartition)
 			kinesisProducer = getKinesisProducer();

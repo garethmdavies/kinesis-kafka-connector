@@ -33,18 +33,22 @@ public class AmazonKinesisSinkConnector extends SinkConnector {
 	public static final String AGGREGRATION_ENABLED = "aggregration";
 
 	public static final String USE_PARTITION_AS_HASH_KEY = "usePartitionAsHashKey";
-	
+
 	public static final String FLUSH_SYNC = "flushSync";
-	
+
 	public static final String SINGLE_KINESIS_PRODUCER_PER_PARTITION = "singleKinesisProducerPerPartition";
-	
-	public static final String PAUSE_CONSUMPTION = "pauseConsumption"; 
-	
+
+	public static final String PAUSE_CONSUMPTION = "pauseConsumption";
+
 	public static final String OUTSTANDING_RECORDS_THRESHOLD = "outstandingRecordsThreshold";
-	
+
 	public static final String SLEEP_PERIOD = "sleepPeriod";
-	
+
 	public static final String SLEEP_CYCLES = "sleepCycles";
+
+	public static final String AVRO_PARSER = "avroParser";
+
+	public static final String AVRO_SCHEMA_CACHE_SIZE = "avroSchemaCacheSize";
 
 	private String region;
 
@@ -67,18 +71,23 @@ public class AmazonKinesisSinkConnector extends SinkConnector {
 	private String aggregration;
 
 	private String usePartitionAsHashKey;
-	
+
 	private String flushSync;
-	
-	private String singleKinesisProducerPerPartition; 
-	
+
+	private String singleKinesisProducerPerPartition;
+
 	private String pauseConsumption;
-	
+
 	private String outstandingRecordsThreshold;
-	
+
 	private String sleepPeriod;
-	
+
 	private String sleepCycles;
+
+	private String avroParser;
+
+	private String avroSchemaCacheSize;
+
 
 	@Override
 	public void start(Map<String, String> props) {
@@ -99,6 +108,8 @@ public class AmazonKinesisSinkConnector extends SinkConnector {
 		outstandingRecordsThreshold = props.get(OUTSTANDING_RECORDS_THRESHOLD);
 		sleepPeriod = props.get(SLEEP_PERIOD);
 		sleepCycles = props.get(SLEEP_CYCLES);
+		avroParser = props.get(AVRO_PARSER);
+		avroSchemaCacheSize = props.get(AVRO_SCHEMA_CACHE_SIZE);
 	}
 
 	@Override
@@ -168,37 +179,47 @@ public class AmazonKinesisSinkConnector extends SinkConnector {
 				config.put(USE_PARTITION_AS_HASH_KEY, usePartitionAsHashKey);
 			else
 				config.put(USE_PARTITION_AS_HASH_KEY, "false");
-			
+
 			if(flushSync != null)
 				config.put(FLUSH_SYNC, flushSync);
 			else
 				config.put(FLUSH_SYNC, "true");
-			
+
 			if(singleKinesisProducerPerPartition != null)
 				config.put(SINGLE_KINESIS_PRODUCER_PER_PARTITION, singleKinesisProducerPerPartition);
 			else
 				config.put(SINGLE_KINESIS_PRODUCER_PER_PARTITION, "false");
-			
+
 			if(pauseConsumption != null)
 				config.put(PAUSE_CONSUMPTION, pauseConsumption);
 			else
 				config.put(PAUSE_CONSUMPTION, "true");
-			
+
 			if(outstandingRecordsThreshold != null)
 				config.put(OUTSTANDING_RECORDS_THRESHOLD, outstandingRecordsThreshold);
 			else
 				config.put(OUTSTANDING_RECORDS_THRESHOLD, "500000");
-			
+
 			if(sleepPeriod != null)
 				config.put(SLEEP_PERIOD, sleepPeriod);
 			else
 				config.put(SLEEP_PERIOD, "1000");
-			
+
 			if(sleepCycles != null)
 				config.put(SLEEP_CYCLES, sleepCycles);
 			else
 				config.put(SLEEP_CYCLES, "10");
-			
+
+			if(avroParser != null)
+				config.put(AVRO_PARSER, avroParser);
+			else
+				config.put(AVRO_PARSER, "false");
+
+			if(avroSchemaCacheSize != null)
+				config.put(AVRO_SCHEMA_CACHE_SIZE, avroSchemaCacheSize);
+			else
+				config.put(AVRO_SCHEMA_CACHE_SIZE, "50");
+
 			configs.add(config);
 
 		}
