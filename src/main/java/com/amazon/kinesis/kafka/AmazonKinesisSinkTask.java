@@ -76,7 +76,7 @@ public class AmazonKinesisSinkTask extends SinkTask {
 			if (t instanceof UserRecordFailedException) {
 				Attempt last = Iterables.getLast(((UserRecordFailedException) t).getResult().getAttempts());
 				throw new DataException("Kinesis Producer was not able to publish data - " + last.getErrorCode() + "-"
-																+ last.getErrorMessage());
+						+ last.getErrorMessage());
 
 			}
 			throw new DataException("Exception during Kinesis put", t);
@@ -217,17 +217,17 @@ public class AmazonKinesisSinkTask extends SinkTask {
 	}
 
 	private ListenableFuture<UserRecordResult> addUserRecord(KinesisProducer kp, String streamName, String partitionKey,
-																													 boolean usePartitionAsHashKey, SinkRecord sinkRecord) {
+			boolean usePartitionAsHashKey, SinkRecord sinkRecord) {
 
 		// If configured use kafka partition key as explicit hash key
 		// This will be useful when sending data from same partition into
 		// same shard
 		if (usePartitionAsHashKey)
 			return kp.addUserRecord(streamName, partitionKey, Integer.toString(sinkRecord.kafkaPartition()),
-															kafkaRecordParser.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
+					kafkaRecordParser.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
 		else
 			return kp.addUserRecord(streamName, partitionKey,
-															kafkaRecordParser.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
+					kafkaRecordParser.parseValue(sinkRecord.valueSchema(), sinkRecord.value()));
 	}
 
 	@Override
